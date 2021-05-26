@@ -11,8 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.json.simple.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -23,6 +25,7 @@ public class HttpServerHandler implements HttpHandler {
     private static String EXCHANGE_NAME = "smsGateway_ex";
     private static String ROUTING_KEY = "smsGateway/request";
     private Channel channel;
+    private BufferedReader bufferedReader;
 
     public HttpServerHandler() {
         try {
@@ -37,14 +40,23 @@ public class HttpServerHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) {
         String messageId = UUID.randomUUID().toString();
-        try {
+        var client = HttpClient.newHttpClient();
 
+        try {
+            CustomMessage customMessage = new CustomMessage();
             JSONObject obj = new JSONObject();
 
-            obj.put("message", String.format("slm"));
-            obj.put("MSISDN", "9120847906");
-            obj.put("smsNo", "8080");
+
+            obj.put("message", customMessage.getMessage());
+            obj.put("MSISDN", customMessage.getMSISDN());
+            obj.put("smsNo", customMessage.getSmsNo());
             obj.put("Id", messageId);
+
+            String response = "This is the response";
+            long threadId = Thread.currentThread().getId();
+            System.out.println("I am thread " + threadId);
+            response = response + "Thread Id = " + threadId;
+
 
             this.channel.basicPublish(EXCHANGE_NAME, ROUTING_KEY, null, obj.toJSONString().getBytes());
             System.out.println(" [x] Sent '" + obj.toJSONString() + "'");
@@ -53,6 +65,14 @@ public class HttpServerHandler implements HttpHandler {
             exchange.sendResponseHeaders(200, bytes.length);
             outputStream.write(bytes);
             outputStream.close();
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+            bufferedReader.close();
+
+            System.out.println(content.toString());
 
         } catch (IOException e) {
             LOGGER.error("Failed to publish message", e);
