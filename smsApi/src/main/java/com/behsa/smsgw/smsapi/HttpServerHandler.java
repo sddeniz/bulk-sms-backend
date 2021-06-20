@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+//import javax.jms.*;
 
 
 public class HttpServerHandler implements HttpHandler {
@@ -40,11 +42,12 @@ public class HttpServerHandler implements HttpHandler {
     public void handle(HttpExchange exchange) {
         String messageId = UUID.randomUUID().toString();
         try {
+
             SmsMessage smsMessage = objectMapper.readValue(exchange.getRequestBody(), SmsMessage.class);
             smsMessage.setId(messageId);
             //publish sms request to rabbitMQ
             this.channel.basicPublish(EXCHANGE_NAME, ROUTING_KEY, null, objectMapper.writeValueAsBytes(smsMessage));
-            System.out.println(" [x] Sent '" + smsMessage + "'");
+            LOGGER.info("sent"+smsMessage);
 
             //response to caller
             OutputStream outputStream = exchange.getResponseBody();
@@ -52,6 +55,7 @@ public class HttpServerHandler implements HttpHandler {
             exchange.sendResponseHeaders(200, bytes.length);
             outputStream.write(bytes);
             outputStream.close();
+
 
         } catch (IOException e) {
             LOGGER.error("Failed to publish message", e);

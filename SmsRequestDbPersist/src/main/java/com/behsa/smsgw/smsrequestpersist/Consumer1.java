@@ -18,13 +18,36 @@ public class Consumer1 {
     public static String ROUTING_KEY = "smsGateway/listener";
 
     public Consumer1() {
+//        Channel channel = rabbitMqClient.getChannel();
+//        boolean autoAck = false;
+//        new DefaultConsumer(channel) {
+//            @Override
+//            public void handleDelivery(String consumerTag,
+//                                       Envelope envelope,
+//                                       AMQP.BasicProperties properties,
+//                                       byte[] body)
+//                    throws IOException {
+//                ROUTING_KEY  = envelope.getRoutingKey();
+//                String contentType = properties.getContentType();
+//                long deliveryTag = envelope.getDeliveryTag();
+//                // (process the message components here ...)
+//                channel.basicAck(deliveryTag, false);
+//            }
+//        };
+//
+
+
+
+
+
+
         try {
             Channel channel = rabbitMqClient.getChannel();
             channel.exchangeDeclare(EXCHANGE_NAME, ExchangeType.DIRECT.getExchangeName(), true);
 
             channel.queueDeclare(QUEUE_NAME, false, false, false, null);
             channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
-            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+            LOGGER.info(" [*] Waiting for messages. To exit press CTRL+C");
             channel.basicConsume(QUEUE_NAME, true, (consumerTag, delivery) -> {
                 String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
                 LOGGER.info("received new message {}", message);
@@ -36,5 +59,8 @@ public class Consumer1 {
         }
 
     }
+
+
+
 
 }

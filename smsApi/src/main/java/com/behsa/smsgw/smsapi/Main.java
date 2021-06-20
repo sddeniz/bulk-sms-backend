@@ -11,7 +11,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         int serverPort = 8002;
         HttpServer server = HttpServer.create(new InetSocketAddress(serverPort), 0);
-        HttpContext context = server.createContext("/", new HttpServerHandler());
+        HttpContext context = server.createContext("/test", new HttpServerHandler());
         context.setAuthenticator(new ApiRestBasicAuthentication("deniz"));
         server.setExecutor(null);
         server.start();
